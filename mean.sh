@@ -1,4 +1,13 @@
 # This script installs the MEAN development stack on anay mac computer
+echo 'DISCLAIMER: USE THIS SCRIPT AT YOUR OWN RISK!'
+echo 'THE AUTHOR TAKES NO RESPONSIBILITY FOR THE RESULTS OF THIS SCRIPT.'
+echo "Welcome the the MEAN Installer script for Macs"
+echo "Please make sure that you do not have node installed from another source such as the pkg"
+echo "This script uses homebrew and may install it if necessary"
+echo "This script cannot be run with sudo as it will create brew errors"
+echo 'Press Control-C to quit now.'
+read
+
 ask() {
     # http://djm.me/ask
     while true; do
@@ -46,6 +55,7 @@ then
 else
   echo "Node not found"
   echo "Installing Node..."
+	sudo chown -R $USER /usr/local/share/systemtap/tapset
 	brew install node
 fi
 if [ -e "/usr/local/bin/mongod" ]
@@ -56,32 +66,36 @@ else
   echo "Installing Mongodb..."
   brew install mongodb
 fi
-done=false
-if ask "Do you want to create a mongodb data dir?"; then
-  while [ $done = false ]
-  do
-    echo "Enter a location (/data/db):"
-    read dir
-    if [ -d "$dir" ]; then
-      echo "$dir already exists!"
-    else
-      if [ $dir == "/data/db" ]; then
-        echo "Creating database directory..."
-        sudo mkdir -p /data/db
-        sudo chown -R $USER /data/db
-        done=true
+if [ -d "/data/db" ]; then
+  echo "Found Mongodb data dir"
+else
+  done=false
+  if ask "Do you want to create a mongodb data dir?"; then
+    while [ $done = false ]
+    do
+      echo "Enter a location (/data/db):"
+      read dir
+      if [ -d "$dir" ]; then
+        echo "$dir already exists!"
       else
-        echo "To start mongodb you must use mongod --dbpath $dir"
-        if ask "Are you ok with this?"; then
-          echo "Ok, remember this..."
+        if [ $dir == "/data/db" ]; then
           echo "Creating database directory..."
-          sudo mkdir -p $dir
-          sudo chown -R $USER $dir
+          sudo mkdir -p /data/db
+          sudo chown -R $USER /data/db
           done=true
+        else
+          echo "To start mongodb you must use mongod --dbpath $dir"
+          if ask "Are you ok with this?"; then
+            echo "Ok, remember this..."
+            echo "Creating database directory..."
+            sudo mkdir -p $dir
+            sudo chown -R $USER $dir
+            done=true
+          fi
         fi
       fi
-    fi
-  done
+    done
+  fi
 fi
 if [ -e "/usr/local/bin/grunt" ]
 then
@@ -93,6 +107,10 @@ else
 fi
 echo "Updating npm repos"
 sudo npm update
+echo "Node: "
+node --version
+echo "NPM: "
+npm --version
 if ask "Do you want to update npm and node?"; then
     echo "Yes"
     echo "Updating npm and node"
@@ -105,11 +123,11 @@ if ask "Do you want to update npm and node?"; then
 else
     echo "Not updating node and npm"
 fi
-if ask "Do you want to install yo?"; then
-  if [ -e "/usr/local/bin/yo" ]
-  then
-  	echo "You already have yo installed!"
-  else
+if [ -e "/usr/local/bin/yo" ]
+then
+	echo "Yo found!"
+else
+  if ask "Do you want to install yo?"; then
     sudo npm install -g yo
   fi
 fi
